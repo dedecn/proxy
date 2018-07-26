@@ -291,6 +291,29 @@ namespace tcp_proxy
    };
 }
 
+int start_proxy(const std::string local_host, const unsigned short local_port, const std::string forward_host, const unsigned short forward_port)
+{
+	boost::asio::io_service ios;
+
+	try
+	{
+		tcp_proxy::bridge::acceptor acceptor(ios,
+			local_host, local_port,
+			forward_host, forward_port);
+
+		acceptor.accept_connections();
+
+		ios.run();
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
+	return 0;
+}
+
+#ifdef FOR_MAIN
 int main(int argc, char* argv[])
 {
    if (argc != 5)
@@ -304,27 +327,9 @@ int main(int argc, char* argv[])
    const std::string local_host      = argv[1];
    const std::string forward_host    = argv[3];
 
-   boost::asio::io_service ios;
-
-   try
-   {
-      tcp_proxy::bridge::acceptor acceptor(ios,
-                                           local_host, local_port,
-                                           forward_host, forward_port);
-
-      acceptor.accept_connections();
-
-      ios.run();
-   }
-   catch(std::exception& e)
-   {
-      std::cerr << "Error: " << e.what() << std::endl;
-      return 1;
-   }
-
-   return 0;
+   return start_proxy(local_host, local_port, forward_host, forward_port);
 }
-
+#endif
 /*
  * [Note] On posix systems the tcp proxy server build command is as follows:
  * c++ -pedantic -ansi -Wall -Werror -O3 -o tcpproxy_server tcpproxy_server.cpp -L/usr/lib -lstdc++ -lpthread -lboost_thread -lboost_system
