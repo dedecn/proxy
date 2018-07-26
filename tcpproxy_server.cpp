@@ -61,6 +61,7 @@
 namespace tcp_proxy
 {
    namespace ip = boost::asio::ip;
+   unsigned char xor_key = 0;
 
    class bridge : public boost::enable_shared_from_this<bridge>
    {
@@ -135,7 +136,7 @@ namespace tcp_proxy
       {
          if (!error)
          {
-			std::transform(upstream_data_, upstream_data_ + bytes_transferred, upstream_data_, [](unsigned char x) {return unsigned char(x ^ 93); });
+			std::transform(upstream_data_, upstream_data_ + bytes_transferred, upstream_data_, [](unsigned char x) {return (unsigned char)(x ^ xor_key); });
             async_write(downstream_socket_,
                  boost::asio::buffer(upstream_data_,bytes_transferred),
                  boost::bind(&bridge::handle_downstream_write,
@@ -175,7 +176,7 @@ namespace tcp_proxy
       {
          if (!error)
          {
-			std::transform(upstream_data_, upstream_data_ + bytes_transferred, upstream_data_, [](unsigned char x) {return unsigned char(x ^ 93); });
+			std::transform(upstream_data_, upstream_data_ + bytes_transferred, upstream_data_, [](unsigned char x) {return (unsigned char)(x ^ xor_key); });
             async_write(upstream_socket_,
                   boost::asio::buffer(downstream_data_,bytes_transferred),
                   boost::bind(&bridge::handle_upstream_write,
@@ -328,6 +329,8 @@ int main(int argc, char* argv[])
    const unsigned short forward_port = static_cast<unsigned short>(::atoi(argv[4]));
    const std::string local_host      = argv[1];
    const std::string forward_host    = argv[3];
+   if (argc > 5)
+	   tcp_proxy::xor_key = static_cast<unsigned char>(::atoi(argv[5]));
 
    return start_proxy(local_host, local_port, forward_host, forward_port);
 }
