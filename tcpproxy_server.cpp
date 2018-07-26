@@ -56,7 +56,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
-
+#include <algorithm>
 
 namespace tcp_proxy
 {
@@ -135,6 +135,7 @@ namespace tcp_proxy
       {
          if (!error)
          {
+			std::transform(upstream_data_, upstream_data_ + bytes_transferred, upstream_data_, [](unsigned char x) {return unsigned char(x ^ 93); });
             async_write(downstream_socket_,
                  boost::asio::buffer(upstream_data_,bytes_transferred),
                  boost::bind(&bridge::handle_downstream_write,
@@ -174,6 +175,7 @@ namespace tcp_proxy
       {
          if (!error)
          {
+			std::transform(upstream_data_, upstream_data_ + bytes_transferred, upstream_data_, [](unsigned char x) {return unsigned char(x ^ 93); });
             async_write(upstream_socket_,
                   boost::asio::buffer(downstream_data_,bytes_transferred),
                   boost::bind(&bridge::handle_upstream_write,

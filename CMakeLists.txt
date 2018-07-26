@@ -26,5 +26,7 @@ endif()
 
 if(MSVC)
 target_compile_options( ${PROJECT_NAME} PUBLIC "/MT$<$<STREQUAL:$<CONFIGURATION>,Debug>:d>" )
+else()
+target_link_libraries( ${PROJECT_NAME} pthread boost_thread boost_system)
 endif()
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} pthread boost_thread boost_system)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
