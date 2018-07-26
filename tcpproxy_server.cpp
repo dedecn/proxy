@@ -300,7 +300,9 @@ namespace tcp_proxy
 				upstream_socket_.close();
 			}
 			delete downstream_crypto_;
+			downstream_crypto_ = nullptr;
 			delete upstream_crypto_;
+			upstream_crypto_ = nullptr;
 		}
 
 		socket_type downstream_socket_;
