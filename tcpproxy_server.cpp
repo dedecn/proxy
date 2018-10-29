@@ -172,7 +172,7 @@ namespace tcp_proxy
 		{
 			// Attempt connection to remote server (upstream side)
 			char port[32];
-			itoa(upstream_port, port, 10);
+			sprintf(port, "%d", upstream_port);
 			boost::asio::ip::tcp::resolver::query query(upstream_host, port);
 
 			boost::asio::ip::tcp::resolver::iterator iterator = resolver_.resolve(query);
