@@ -142,7 +142,8 @@ namespace tcp_proxy
 		typedef boost::shared_ptr<bridge> ptr_type;
 
 		bridge(boost::asio::io_service& ios, const std::string& key)
-			: downstream_socket_(ios),
+			: resolver_(ios),
+			downstream_socket_(ios),
 			upstream_socket_(ios),
 			key_(key),
 			downstream_crypto_(nullptr),
@@ -170,10 +171,13 @@ namespace tcp_proxy
 		void start(const std::string& upstream_host, unsigned short upstream_port)
 		{
 			// Attempt connection to remote server (upstream side)
-			upstream_socket_.async_connect(
-				ip::tcp::endpoint(
-					boost::asio::ip::address::from_string(upstream_host),
-					upstream_port),
+			char port[32];
+			itoa(upstream_port, port, 10);
+			boost::asio::ip::tcp::resolver::query query(upstream_host, port);
+
+			boost::asio::ip::tcp::resolver::iterator iterator = resolver_.resolve(query);
+			boost::asio::async_connect(upstream_socket_, 
+				iterator,
 				boost::bind(&bridge::handle_upstream_connect,
 					shared_from_this(),
 					boost::asio::placeholders::error));
@@ -307,6 +311,8 @@ namespace tcp_proxy
 
 		socket_type downstream_socket_;
 		socket_type upstream_socket_;
+
+		ip::tcp::resolver resolver_;
 
 		enum { max_data_length = 8192 }; //8KB
 		unsigned char downstream_data_[max_data_length];
