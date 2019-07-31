@@ -147,7 +147,11 @@ namespace tcp_proxy
 			upstream_socket_(ios),
 			key_(key),
 			downstream_crypto_(nullptr),
-			upstream_crypto_(nullptr)
+			upstream_crypto_(nullptr),
+			downstream_read_close_(false),
+			upstream_read_close_(false),
+			downstream_write_close_(false),
+			upstream_write_close_(false)
 		{
 			if (!key_.empty())
 			{
@@ -229,7 +233,10 @@ namespace tcp_proxy
 						boost::asio::placeholders::error));
 			}
 			else
-				close();
+			{
+				upstream_read_close_ = true;
+				prepare_close();
+			}
 		}
 
 		// Write to client complete, Async read from remote server
@@ -245,7 +252,10 @@ namespace tcp_proxy
 						boost::asio::placeholders::bytes_transferred));
 			}
 			else
-				close();
+			{
+				downstream_write_close_ = true;
+				prepare_close();
+			}
 		}
 		// *** End Of Section A ***
 
@@ -270,7 +280,10 @@ namespace tcp_proxy
 						boost::asio::placeholders::error));
 			}
 			else
-				close();
+			{
+				downstream_read_close_ = true;
+				prepare_close();
+			}
 		}
 
 		// Write to remote server complete, Async read from client
@@ -286,9 +299,19 @@ namespace tcp_proxy
 						boost::asio::placeholders::bytes_transferred));
 			}
 			else
-				close();
+			{
+				upstream_write_close_ = true;
+				prepare_close();
+			}
 		}
 		// *** End Of Section B ***
+
+		void prepare_close()
+		{
+			if (downstream_read_close_ && upstream_read_close_ || downstream_write_close_ && upstream_write_close_ 
+				|| upstream_read_close_ && upstream_write_close_ || downstream_read_close_ && downstream_write_close_)
+				close();
+		}
 
 		void close()
 		{
@@ -311,6 +334,10 @@ namespace tcp_proxy
 
 		socket_type downstream_socket_;
 		socket_type upstream_socket_;
+		bool downstream_read_close_;
+		bool upstream_read_close_;
+		bool downstream_write_close_;
+		bool upstream_write_close_;
 
 		ip::tcp::resolver resolver_;
 
